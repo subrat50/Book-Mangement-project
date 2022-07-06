@@ -169,15 +169,15 @@ Refer below sample
 ```yaml
 {
   _id: ObjectId("88abc190ef0288abc190ef02"),
-  title: "Mr",
-  name: "John Doe",
-  phone: 9897969594,
-  email: "johndoe@mailinator.com", 
-  password: "abcd1234567",
-  address: {
-    street: "110, Ridhi Sidhi Tower",
-    city: "Jaipur",
-    pincode: "400001"
+    title: "Mr",
+    name: "John Doe",
+    phone: 9897969594,
+    email: "johndoe@mailinator.com", 
+    password: "abcd1234567",
+    address: {
+      street: "110, Ridhi Sidhi Tower",
+      city: "Jaipur",
+      pincode: "400001"
   },
   "createdAt": "2021-09-17T04:25:07.803Z",
   "updatedAt": "2021-09-17T04:25:07.803Z",
