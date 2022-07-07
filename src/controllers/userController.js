@@ -14,23 +14,19 @@ const isvalidRequest = function (requestBody) {
 const isValidTitle = function (title) {
     return ["Mr", "Mrs", "Miss"].indexOf(title) !== -1
   }
-//  const isValidPassword= function(password){
-//     if(password.length >=8 && password.length <=15){
-//         return true
-//     }else {
-//         return false
-//     }
-//  }
-//1
+
+//==========================create user========================================================
+
 const createUser = async function (req, res) {
     try {
         let requestBody = req.body
+    //-----------------------validation start-----------------------------
         if (!isvalidRequest(requestBody)) {
             return res.status(400).send({ status: false, msg: "Please provide User data" })
         }
-
+//--------------------destructure-------------------------------------------------------------
         let { title, name, phone, email, password, address,street,city,pincode } = requestBody
-        //title
+        //------------validate the title
         if (!isValid(title)) {
             return res.status(400).send({ status: false, msg: "Title is required"})
         }
@@ -39,36 +35,35 @@ const createUser = async function (req, res) {
          }
          let checkTitle=await userModel.findOne({title})
          if(!checkTitle) return res.status(400).send({status:false,message:"title is already use"})
-        //name
+        //----------------------validate the name------------------------------
         if (!isValid(name)) {
             return res.status(400).send({ status: false, msg: "Name is required" })
         }
         if(!/^[a-zA-Z.]{2,15}$/.test(name)){
            return res.send({msg:"Invalid format"})
         }
-        //phone 
+    //------------------validate phone---------------------------------------
         if (!isValid(phone)) {
             return res.status(400).send({ status: false, msg: "Phone number is required" })
         }
         if (!(/^[6-9]{1}[0-9]{9}$/im.test(phone))) return res.status(400).send({ status: false, message: "Phone number is invalid. +91 is not required" })
         let checkNumber = await userModel.findOne({ phone })
         if (checkNumber) return res.status(404).send({ status: false, message: "Phone Number is already in use" })
-        //email
+    //-------------validate email---------------------------------------
         if (!isValid(email)) {
             return res.status(400).send({ status: false, msg: "Email is required" })
         }
         if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email))) return res.status(400).send({ status: false, message: "email Id is invalid" })
         let Email = await userModel.findOne({ email })
-        if (Email) return res.status(404).send({ status: false, message: "email is already used" })
-        //password
+        if (Email) return res.status(400).send({ status: false, message: "email is already used" })
+    //------------------------validate password----------------------------------------------
         if (!isValid(password)) {
             return res.status(400).send({ status: false, msg: "Password is required" })
         }
         if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/.test(password)){
             return res.status(400).send({status:false,msg:"Password is invalid"})
         }
-        // if(!isValidPassword(password)) return res.status(400).send({status:false,msg:"please give password in correct format"})
-       
+       //-----------------------------validate addresss-------------------------------------------------------
         if (address) {
             
             if(!isValid(address.street)){
@@ -81,7 +76,7 @@ const createUser = async function (req, res) {
                 return res.status(400).send({status:false,msg:"Pincode is required"})
             }
         }
-       
+    //---------------------send response------------------------------------------------
         let savedData = await userModel.create(requestBody)
         {return res.status(201).send({status:true,data:savedData})}
     }
@@ -90,13 +85,22 @@ const createUser = async function (req, res) {
         res.status(500).send({ status: false, msg: err.message  })
     }
 }
+
+//==============================login user========================================================
+
 const loginUser=async function(req,res){
     try{
     let requestBody=req.body
     if(!isvalidRequest(requestBody)) return res.status(400).send({msg:false,msg:"please provied requestbody"})
     let {email,password}=requestBody
-    if(!email) return res.status(400).send({status:false,msg:"email is required"})
-    if(!password) return res.status(400).send({status:false,msg:"password is required"})
+    if (!isValid(email)) {
+        return res.status(400).send({ status: false, msg: "Email is required" })
+    }
+    if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email))) return res.status(400).send({ status: false, message: "email Id is invalid" })
+    if (!isValid(password))  return res.status(400).send({ status: false, msg: "Password is required" })
+    if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/.test(password))
+    return res.status(400).send({status:false,msg:"Password is invalid"})
+    
 
     let user=await userModel.findOne({email:email,password:password})
     if(!user) return res.status(400).send({status:false,msg:"email & password is incorrect"})
