@@ -50,7 +50,7 @@ const createUser = async function (req, res) {
         }
         if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email))) return res.status(400).send({ status: false, message: "email Id is invalid" })
         let Email = await userModel.findOne({ email })
-        if (Email) return res.status(404).send({ status: false, message: "email is already used" })
+        if (Email) return res.status(400).send({ status: false, message: "email is already used" })
         //password
         if (!isValid(password)) {
             return res.status(400).send({ status: false, msg: "Password is required" })
