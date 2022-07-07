@@ -1,4 +1,5 @@
 const userModel = require("../model/userModel.js")
+const jwt=require("jsonwebtoken")
 
 const isValid = function (value) {
     if (typeof value === "undefined" || value === null) return false;
@@ -13,7 +14,13 @@ const isvalidRequest = function (requestBody) {
 const isValidTitle = function (title) {
     return ["Mr", "Mrs", "Miss"].indexOf(title) !== -1
   }
-  
+//  const isValidPassword= function(password){
+//     if(password.length >=8 && password.length <=15){
+//         return true
+//     }else {
+//         return false
+//     }
+//  }
 //1
 const createUser = async function (req, res) {
     try {
@@ -30,6 +37,8 @@ const createUser = async function (req, res) {
         if(!isValidTitle(title)){
             return res.send({msg:"Invalid format of title"})
          }
+         let checkTitle=await userModel.findOne({title})
+         if(!checkTitle) return res.status(400).send({status:false,message:"title is already use"})
         //name
         if (!isValid(name)) {
             return res.status(400).send({ status: false, msg: "Name is required" })
@@ -55,18 +64,13 @@ const createUser = async function (req, res) {
         if (!isValid(password)) {
             return res.status(400).send({ status: false, msg: "Password is required" })
         }
-        if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)){
+        if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/.test(password)){
             return res.status(400).send({status:false,msg:"Password is invalid"})
         }
-        //address
-        // if (!isValid(address)) {
-            // return res.status(400).send({ status: false, msg: "Address is required" })
-        // }    
-        
+        // if(!isValidPassword(password)) return res.status(400).send({status:false,msg:"please give password in correct format"})
+       
         if (address) {
-            //  if (!isValid(address)) {
-            // return res.status(400).send({ status: false, msg: "Address is required" })
-        // }
+            
             if(!isValid(address.street)){
                 return res.status(400).send({status:false,msg:"Street is required"})
             }
@@ -86,6 +90,35 @@ const createUser = async function (req, res) {
         res.status(500).send({ status: false, msg: err.message  })
     }
 }
+const loginUser=async function(req,res){
+    try{
+    let requestBody=req.body
+    if(!isvalidRequest(requestBody)) return res.status(400).send({msg:false,msg:"please provied requestbody"})
+    let {email,password}=requestBody
+    if(!email) return res.status(400).send({status:false,msg:"email is required"})
+    if(!password) return res.status(400).send({status:false,msg:"password is required"})
+
+    let user=await userModel.findOne({email:email,password:password})
+    if(!user) return res.status(400).send({status:false,msg:"email & password is incorrect"})
+    //---------creat jwt token-----------
+    let token=jwt.sign({
+         email:user.email.toString(),
+        userId:user._id.toString(),
+        project:"Book Mangement",
+        batch:"Radon"
+    },
+    "group77",
+    {
+        expiresIn: "72h",
+    }
+    )
+    res.setHeader("x-api-key",token)
+    return res.status(400).send({status:true,token:token,msg:"login sucessfully"})
+}catch(err){
+       res.status(500).send({status:false,msg:err.message})
+}
+}
 
 
 module.exports.createUser=createUser
+module.exports.loginUser=loginUser
