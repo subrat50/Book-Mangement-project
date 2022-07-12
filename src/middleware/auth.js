@@ -28,19 +28,4 @@ const authenticate = async function (req, res, next) {
     }
     next()
 }
-//     try {
-//         let token = req.headers["x-api-key"];
-//         if (!token) token = req.headers["x-Api-key"];
-
-//         if (!token) return res.status(401).send({ status: false, msg: "Token must be present" });
-//         console.log(token);
-
-//         let decodedToken = jwt.verify(token, "Group-77");
-//         if (!decodedToken)
-//             return res.status(401).send({ status: false, msg: "Token is invalid" })
-//         next()
-//     }
-//     catch (err) { res.status(500).send({ status: false, msg: err.message }) }
-// 
-
 module.exports.authenticate = authenticate
