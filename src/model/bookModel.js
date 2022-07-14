@@ -9,6 +9,7 @@ const bookSchema = new mongoose.Schema({
     category: { type: String, required: true, trim: true },
     subcategory: { type: [String], required: true, trim: true },
     reviews: { type: Number, default: 0, trim: true },
+    bookCover:{type:String},
     deletedAt: { type: Date },
     isDeleted: { type: Boolean, default: false },
     releasedAt: { type: Date, required: true, },

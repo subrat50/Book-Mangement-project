@@ -10,6 +10,14 @@ const isValid = function (value) {
   if (typeof value == "string" && value.trim().length === 0) return false;
   return true;
 };
+const isValidRating = function (value) {
+  const rating = /^[1-5](\.[1-5][1-5]?)?$/
+  return rating.test(value)
+}
+const isValidName = function (value) {
+  const dateName = /^[a-zA-Z_ ]{2,100}$/
+  return dateName.test(value)
+}
 
 const isValidObjectId = function (id) {
   var ObjectId = mongoose.Types.ObjectId;
@@ -17,6 +25,7 @@ const isValidObjectId = function (id) {
 }
 //====================================create review===========================================
 const createReview = async function (req, res) {
+  try{
   const requestBody = req.body
   const Id = req.params.bookId
   //----------------------check request body------------------------------------------
@@ -40,6 +49,7 @@ const createReview = async function (req, res) {
 
   //-------------------destructing--------------------------------------
   let { review, rating } = requestBody
+
   //-----------------------------check review------------------------------------------
   if (!review) return res.status(400).send({ message: "review is required" })
   if (!isValid(review)) return res.status(400).send({ message: "invalid review" })
@@ -49,7 +59,7 @@ const createReview = async function (req, res) {
 
   //--------------------check rating----------------------------------
   if (!isValid(rating)) res.status(400).send({ message: "review is required" })
-  if (!(/^[1-5](\.[1-5][1-5]?)?$/).test(rating)) return res.status(400).send({ message: "please give valid rating" })
+  if (!isValidRating(rating)) return res.status(400).send({ message: "please give valid rating" })
   //----------------------assigen date--------------------------------------
   requestBody.reviewedAt = new Date()
   //----------------------------create review----------------------------------------
@@ -61,7 +71,10 @@ const createReview = async function (req, res) {
 
   let data = { _id, title, userId,category, subcategory, excerpt, reviews, updatedAt, releasedAt, createdAt, reviewData }
   res.status(201).send({ status: true, message: "created sucessfully", data: data })
-
+  }catch(err){
+    console.log(err)
+    return res.status(500).send({status:false,message:err.message})
+  }
 
 }
 
@@ -71,46 +84,51 @@ const updateReview = async function (req, res) {
   try {
     let data = req.body
     if (!isvalidRequest(data)) { return res.status(400).send({ status: false, msg: "Please provide User data" }) }
+
+    //----------------------- reviewId & bookId sent through path params--------------------------------
     const bookId = req.params.bookId;
     const reviewId = req.params.reviewId
-
+//----------------validate the id---------------------------------------
     if (!isValidObjectId(bookId)) return res.status(400).send({ status: false, msg: "Invalid Book id" })
     if (!isValidObjectId(reviewId)) return res.status(400).send({ status: false, msg: "Invalid Review id" })
-
+//----------------------------checkBook----------------------------------------
     let checkBook = await bookModel.findOne({ _id: bookId, isDeleted: false })
     if (!checkBook) return res.status(404).send({ status: false, message: "Book not found" })
-
+//------------------check review-----------------------------------------
     let checkReview = await reviewModel.findOne({ _id: reviewId, isDeleted: false })
     if (!checkReview) return res.status(404).send({ status: false, message: "Review not found" })
-
+//------------------c heck bookid is same or not-------------------------------------------
     if (checkReview.bookId != bookId) return res.status(403).send({ message: "Review is not from this book" })
-    // Ckecking for already deleted books
+    //--------------------Checking for already deleted books---------------------------------------
     if (checkBook.isDeleted == true)
       return res.status(400).send({ status: false, message: "Book is already deleted" })
-
+//-------------------------destructing -------------------------------
     let { review, rating, reviewedBy } = data;
-    //review
+    //--------------------review----------------------------
     if (!review) return res.status(400).send({ message: "Review is required" })
-    if (!/^[a-zA-Z_ ]{2,500}$/.test(review)) { return res.status(400).send({ status: false, msg: "Review is invalid" }) }
-    //rating
+    if (!isValidName(review)) { return res.status(400).send({ status: false, msg: "Review is invalid" }) }
+    //----------------------check rating-------------------------
     if (rating) {
       if (!rating) return res.status(400).send({ message: "Rating is required" })
-      if (!(/^[1-5](\.[1-5][1-5]?)?$/).test(rating)) return res.status(400).send({ message: "Please give valid rating" })
+      if (!isValidRating(rating)) return res.status(400).send({ message: "Please give valid rating" })
     }
-    //reviewedBy
+    //------------------------------reviewedBy--------------------------------------
     if (reviewedBy) {
       if (!reviewedBy) return res.status(400).send({ message: "ReviewedBy is required" })
-      if (!/^[a-zA-Z_ ]{2,500}$/.test(reviewedBy)) { return res.status(400).send({ status: false, msg: "Reviewed by is invalid" }) }
+      if (!isValidName(reviewedBy)) { return res.status(400).send({ status: false, msg: "Reviewed by is invalid" }) }
     }
-    //Released At
+    //---------------------------------Released At------------------------------------------------
     data.reviewedAt = new Date()
     const reviewData = await reviewModel.findOneAndUpdate(
       { _id: reviewId },
       { ...data }, { new: true }
     );
+    //----------------------use destructring methoed----------------------------------------------
     let { _id, title,userId, category, subcategory, excerpt, reviews, updatedAt, releasedAt, createdAt } = checkBook
 
     let data1 = { _id, title, userId,category, subcategory, excerpt, reviews, updatedAt, releasedAt, createdAt, reviewData }
+
+    //---------------------------------send response------------------------------------------
     return res.status(200).send({ status: true, data:data1 });
   }
   catch (err) {
@@ -121,7 +139,7 @@ const updateReview = async function (req, res) {
 //======================delete review==========================================
 const deleteReview = async function (req, res) {
   try {
-    // reviewId & bookId sent through path params
+    //----------------------- reviewId & bookId sent through path params--------------------------------
     const reviewId = req.params.reviewId;
     const bookId = req.params.bookId;
 
